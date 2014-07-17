@@ -22,17 +22,32 @@ Dungeon::Dungeon(int w, int h, int seed) : w(w), h(h), seed(seed)
     generateExit();
 }
 
+bool Dungeon::isCorner(int i, int j)
+{
+    return false;
+}
+
+bool Dungeon::isVertical(int i, int j)
+{
+    return (i > 0 && map[i - 1][j] == '\0') || (i < h && map[i + 1][j] == '\0');
+}
+
+bool Dungeon::isHorizontal(int i, int j)
+{
+    return (j > 0 && map[i][j - 1] == '\0') || (j < w && map[i][j + 1] == '\0');
+}
+
 void Dungeon::print()
 {
     for (int i = 0; i < h; ++i) {
         for (int j = 0; j < w; ++j) {
             if (map[i][j] == ' ') {
-                if ((i > 0 && map[i - 1][j] == '\0') ||
-                    (i < h && map[i + 1][j] == '\0')) {
+                if (isVertical(i, j)) {
                     std::cout << '-' << ' ';
-                } else if ((j > 0 && map[i][j - 1] == '\0') ||
-                           (j < w && map[i][j + 1] == '\0')) {
+                } else if (isHorizontal(i, j)) {
                     std::cout << '|' << ' ';
+                } else if (isCorner(i, j)) {
+                    std::cout << '-' << ' ';
                 } else {
                     std::cout << ' ' << ' ';
                 }
@@ -54,67 +69,126 @@ int Dungeon::getRand(int min, int max)
 
 void Dungeon::generateRooms()
 {
-    totalRoomCount = getRand(w + h / 6, w + h / 4);
-    rooms = new Room[totalRoomCount];
+    totalRoomCount = 2;//getRand(w + h / 6, w + h / 4);
+    rooms = new Room [totalRoomCount];
+
     for (int i = 0; i < totalRoomCount; ++i) {
         makeRoom();
+        connectLastRoom();
     }
 }
 
 void Dungeon::makeRoom()
 {
-    int _x = 0, _y = 0, _w = 0, _h = 0;
-    Room room = Room();
-    bool collide = false;
+    const int MIN_WIDTH = 5;
+    int x = getRand(1, w - MIN_WIDTH - 2);
+    int y = getRand(1, h - MIN_WIDTH - 2);
+    int _w = getRand(MIN_WIDTH, std::min(w - x - 2, 10));
+    int _h = getRand(MIN_WIDTH, std::min(h - y - 2, 10));
 
-    while (!collide) {
-        _x = getRand(1, w - 4);
-        _y = getRand(1, h - 4);
-        _w = getRand(2, std::min(w - _x - 2, 10));
-        _h = getRand(2, std::min(h - _y - 2, 10));
+    rooms[generatedRoomCount] = Room(x, y, _w, _h);
+    generatedRoomCount++;
+    setMap(x, y, _w, _h);
+}
 
-        if (generatedRoomCount % 2) {
-            if (getRand(0, 1)) {
-                _w = getRand(2, 3);
-            } else {
-                _h = getRand(2, 3);
-            }
+void Dungeon::setMap(int x, int y, int w, int h)
+{
+    for (int j = 0; j < h; ++j) {
+        for (int i = 0; i < w; ++i) {
+            map[y + j][x + i] = ' ';
         }
+    }
+}
 
-        room = Room(_x, _y, _w, _h);
+void Dungeon::connectLastRoom()
+{
+    if (generatedRoomCount == 1) {
+        return;
+    }
 
-        if (generatedRoomCount == 0) {
-            collide = true;
-            break;
-        }
-
-        for (int i = 0; i < generatedRoomCount; ++i) {
-            collide = collide || rooms[i].isCollideWithRoom(room);
-            if (collide) {
-                break;
-            }
+    for (int i; i < generatedRoomCount - 1; ++i) {
+        if (rooms[i].isCollideWithRoom(rooms[generatedRoomCount - 1])) {
+            return;
         }
     }
 
-    rooms[generatedRoomCount++] = room;
+    makeRoad(generatedRoomCount - 1, getRand(0, generatedRoomCount - 2));
+}
 
-    for (int j = 0; j < _h; ++j) {
-        for (int i = 0; i < _w; ++i) {
-            map[_y + j][_x + i] = ' ';
+Overlap getOverlap(int start1, int length1, int start2, int length2)
+{
+    Overlap overlap;
+
+    if (start1 < start2) {
+        overlap.start = start2;
+        overlap.end = start1 + length1 - 1;
+    } else {
+        overlap.start = start1;
+        overlap.end = start2 + length2 - 1;
+    }
+
+    return overlap;
+}
+
+void Dungeon::makeRoad(int a, int b)
+{
+    if (rooms[a].isCollideHorizontal(rooms[b])) {
+        if (rooms[a].getY() > rooms[b].getY()) {
+            int tmp = a;
+            a = b;
+            b = tmp;
+        }
+
+        Overlap overlap = getOverlap(rooms[a].getX(), rooms[a].getW(), rooms[b].getX(), rooms[b].getW());
+        
+        if (overlap.end - overlap.start >= 2) {
+            int roadX = getRand(overlap.start, overlap.end - kRoadWidth + 1);
+            int roadY = rooms[a].getY() + rooms[a].getH();
+            int roadLength = rooms[b].getY() - rooms[a].getY() - rooms[a].getH();
+            setMap(roadX, roadY, kRoadWidth, roadLength);
+            return;
+        }
+    } else if (rooms[a].isCollideVertical(rooms[b])) {
+        if (rooms[a].getX() > rooms[b].getX()) {
+            int tmp = a;
+            a = b;
+            b = tmp;
+        }
+
+        Overlap overlap = getOverlap(rooms[a].getY(), rooms[a].getH(), rooms[b].getY(), rooms[b].getH());
+
+        if (overlap.end - overlap.start >= 2) {
+            int roadX = rooms[a].getX() + rooms[a].getW();
+            int roadY = getRand(overlap.start, overlap.end - kRoadWidth + 1);
+            int roadLength = rooms[b].getX() - rooms[a].getX() - rooms[a].getW();
+            setMap(roadX, roadY, roadLength, kRoadWidth);
+            return;
         }
     }
+
+    //L
 }
 
 void Dungeon::generateEntry()
 {
-    entry.x = getRand(0, h - 1);
-    entry.y = getRand(0, w - 1);
-    map[entry.x][entry.y] = '*';
+    while (true) {
+        entry.x = getRand(0, h - 1);
+        entry.y = getRand(0, w - 1);
+        if (map[entry.x][entry.y] != '\0') {
+            map[entry.x][entry.y] = '*';
+            break;
+        }
+    }
 }
 
 void Dungeon::generateExit()
 {
-    exit.x = getRand(0, h - 1);
-    exit.y = getRand(0, w - 1);
-    map[exit.x][exit.y] = '*';
+    while (true) {
+        exit.x = getRand(0, h - 1);
+        exit.y = getRand(0, w - 1);
+        if (map[exit.x][exit.y] != '\0') {
+            map[exit.x][exit.y] = '*';
+            break;
+        }
+    }
 }

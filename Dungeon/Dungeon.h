@@ -10,12 +10,20 @@
 #define __Dungeon__Dungeon__
 
 #include <iostream>
+#include <algorithm>
 #include "Room.h"
 
 typedef struct point {
     int x;
     int y;
 } Point;
+
+typedef struct overlap {
+    int start;
+    int end;
+} Overlap;
+
+const int kRoadWidth = 3;
 
 class Dungeon {
 private:
@@ -32,6 +40,13 @@ private:
     int getRand(int min, int max);
     void generateRooms();
     void makeRoom();
+    void makeRoad(int a, int b);
+    void setMap(int x, int y, int w, int h);
+    void connectLastRoom();
+
+    bool isCorner(int x, int y);
+    bool isVertical(int x, int y);
+    bool isHorizontal(int x, int y);
     void generateEntry();
     void generateExit();
 

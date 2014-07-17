@@ -14,19 +14,33 @@ Room::Room()
 Room::Room(int x, int y, int w, int h) : x(x), y(y), w(w), h(h)
 {}
 
-bool isCollide(int start1, int end1, int start2, int end2)
+bool isCollide(int start1, int length1, int start2, int length2)
 {
-    if ((start2 >= start1 && start2 <= end1) ||
-        (end2 >= start1 && end2 <= end1)) {
+    int end1 = start1 + length1 - 1;
+    int end2 = start2 + length2 - 1;
+
+    if ((start2 > start1 && start2 < end1) ||
+        (end2 > start1 && end2 < end1)) {
         return true;
     }
+    
     return false;
+}
+
+bool Room::isCollideHorizontal(Room &room)
+{
+    return isCollide(x, w, room.getX(), room.getW());
+}
+
+bool Room::isCollideVertical(Room &room)
+{
+    return isCollide(y, h, room.getY(), room.getH());
 }
 
 bool Room::isCollideWithRoom(Room &room)
 {
-    if (isCollide(x, x + w - 1, room.getX(), room.getX() + room.getW() - 1) &&
-        isCollide(y, y + h - 1, room.getY(), room.getY() + room.getH() - 1)) {
+    if (isCollideHorizontal(room) &&
+        isCollideVertical(room)) {
         return true;
     }
     return false;

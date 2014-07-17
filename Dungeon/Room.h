@@ -20,6 +20,8 @@ public:
     Room();
     Room(int x, int y, int w, int h);
     bool isCollideWithRoom(Room& room);
+    bool isCollideHorizontal(Room& room);
+    bool isCollideVertical(Room& room);
     int getX();
     int getY();
     int getW();
