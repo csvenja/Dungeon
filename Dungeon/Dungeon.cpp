@@ -64,12 +64,13 @@ int Dungeon::getRand(int min, int max)
     if (max == min) {
         return min;
     }
+
     return min + rand() % (max - min + 1);
 }
 
 void Dungeon::generateRooms()
 {
-    totalRoomCount = 2;//getRand(w + h / 6, w + h / 4);
+    totalRoomCount = getRand((w + h) / 7, (w + h) / 5);
     rooms = new Room [totalRoomCount];
 
     for (int i = 0; i < totalRoomCount; ++i) {
@@ -130,43 +131,70 @@ Overlap getOverlap(int start1, int length1, int start2, int length2)
     return overlap;
 }
 
+void swap(int &a, int &b)
+{
+    int tmp = a;
+    a = b;
+    b = tmp;
+}
+
 void Dungeon::makeRoad(int a, int b)
 {
+    int roadX = 0, roadY = 0, roadLength = 0;
+
     if (rooms[a].isCollideHorizontal(rooms[b])) {
         if (rooms[a].getY() > rooms[b].getY()) {
-            int tmp = a;
-            a = b;
-            b = tmp;
+            swap(a, b);
         }
 
         Overlap overlap = getOverlap(rooms[a].getX(), rooms[a].getW(), rooms[b].getX(), rooms[b].getW());
-        
+
         if (overlap.end - overlap.start >= 2) {
-            int roadX = getRand(overlap.start, overlap.end - kRoadWidth + 1);
-            int roadY = rooms[a].getY() + rooms[a].getH();
-            int roadLength = rooms[b].getY() - rooms[a].getY() - rooms[a].getH();
+            roadX = getRand(overlap.start, overlap.end - kRoadWidth + 1);
+            roadY = rooms[a].getY() + rooms[a].getH();
+            roadLength = rooms[b].getY() - rooms[a].getY() - rooms[a].getH();
             setMap(roadX, roadY, kRoadWidth, roadLength);
             return;
         }
     } else if (rooms[a].isCollideVertical(rooms[b])) {
         if (rooms[a].getX() > rooms[b].getX()) {
-            int tmp = a;
-            a = b;
-            b = tmp;
+            swap(a, b);
         }
 
         Overlap overlap = getOverlap(rooms[a].getY(), rooms[a].getH(), rooms[b].getY(), rooms[b].getH());
 
         if (overlap.end - overlap.start >= 2) {
-            int roadX = rooms[a].getX() + rooms[a].getW();
-            int roadY = getRand(overlap.start, overlap.end - kRoadWidth + 1);
-            int roadLength = rooms[b].getX() - rooms[a].getX() - rooms[a].getW();
+            roadX = rooms[a].getX() + rooms[a].getW();
+            roadY = getRand(overlap.start, overlap.end - kRoadWidth + 1);
+            roadLength = rooms[b].getX() - rooms[a].getX() - rooms[a].getW();
             setMap(roadX, roadY, roadLength, kRoadWidth);
             return;
         }
     }
 
-    //L
+    // Build L-shape road
+    if (rooms[a].getX() > rooms[b].getX()) {
+        swap(a, b);
+    }
+
+    int cornerX = rooms[a].getX() + rooms[a].getW() / 2;
+    int cornerY = rooms[b].getY() + rooms[b].getH() / 2;
+    if (rooms[a].getY() > rooms[b].getY()) {
+        roadX = cornerX;
+        roadY = cornerY;
+        roadLength = rooms[a].getY() - cornerY;
+        setMap(roadX, roadY, kRoadWidth, roadLength);
+        roadLength = rooms[b].getX() - cornerX + 1;
+        setMap(roadX, roadY, roadLength, kRoadWidth);
+    } else {
+        roadX = cornerX;
+        roadY = cornerY;
+        roadLength = rooms[b].getX() - cornerX;
+        setMap(roadX, roadY, roadLength, kRoadWidth);
+        roadY = rooms[a].getY() + rooms[a].getH() - 1;
+        roadLength = cornerY - roadY + 1;
+        setMap(roadX, roadY, kRoadWidth, roadLength);
+    }
 }
 
 void Dungeon::generateEntry()
