@@ -22,19 +22,14 @@ Dungeon::Dungeon(int w, int h, int seed) : w(w), h(h), seed(seed)
     generateExit();
 }
 
-bool Dungeon::isCorner(int i, int j)
+bool Dungeon::isHorizontal(int i, int j)
 {
-    return false;
+    return (i > 0 && map[i - 1][j] == '\0') || (i < h - 1 && map[i + 1][j] == '\0');
 }
 
 bool Dungeon::isVertical(int i, int j)
 {
-    return (i > 0 && map[i - 1][j] == '\0') || (i < h && map[i + 1][j] == '\0');
-}
-
-bool Dungeon::isHorizontal(int i, int j)
-{
-    return (j > 0 && map[i][j - 1] == '\0') || (j < w && map[i][j + 1] == '\0');
+    return (j > 0 && map[i][j - 1] == '\0') || (j < w - 1 && map[i][j + 1] == '\0');
 }
 
 void Dungeon::print()
@@ -43,16 +38,15 @@ void Dungeon::print()
         for (int j = 0; j < w; ++j) {
             if (map[i][j] == ' ') {
                 if (isVertical(i, j)) {
-                    std::cout << '-' << ' ';
+                    map[i][j] = '|';
                 } else if (isHorizontal(i, j)) {
-                    std::cout << '|' << ' ';
-                } else if (isCorner(i, j)) {
-                    std::cout << '-' << ' ';
-                } else {
-                    std::cout << ' ' << ' ';
+                    map[i][j] = '-';
                 }
+            }
+            if (map[i][j] == '\0') {
+                std::cout << ' ';
             } else {
-                std::cout << map[i][j] << ' ';
+                std::cout << map[i][j];
             }
         }
         std::cout << std::endl;
@@ -107,7 +101,7 @@ void Dungeon::connectLastRoom()
         return;
     }
 
-    for (int i; i < generatedRoomCount - 1; ++i) {
+    for (int i = 0; i < generatedRoomCount - 1; ++i) {
         if (rooms[i].isCollideWithRoom(rooms[generatedRoomCount - 1])) {
             return;
         }

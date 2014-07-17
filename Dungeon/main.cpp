@@ -18,8 +18,8 @@ int main(int argc, const char * argv[])
 		seed = atoi(argv[2]);
 	}
 
-    const int kMinWidth = 4;
-    const int kMinHeight = 4;
+    const int kMinWidth = 10;
+    const int kMinHeight = 10;
 
     while (w < kMinWidth || h < kMinHeight) {
         std::cout << "input w: ";
