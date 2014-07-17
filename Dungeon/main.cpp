@@ -14,7 +14,7 @@ int main(int argc, const char * argv[])
     int w = 0, h = 0;
     int seed = 0;
 
-	if (argc > 1) {
+	if (argc > 1 && strncmp(argv[1], "-s", 2) == 0) {
 		seed = atoi(argv[2]);
 	}
 
