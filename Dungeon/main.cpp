@@ -18,13 +18,16 @@ int main(int argc, const char * argv[])
 		seed = atoi(argv[2]);
 	}
 
-    while (w <= 2 || h <= 3) {
+    const int kMinWidth = 4;
+    const int kMinHeight = 4;
+
+    while (w < kMinWidth || h < kMinHeight) {
         std::cout << "input w: ";
         std::cin >> w;
         std::cout << "input h: ";
         std::cin >> h;
 
-        if (w <= 2 || h <= 3) {
+        if (w < kMinWidth || h < kMinHeight) {
             std::cout << "Too small for dungeon.";
         }
     }

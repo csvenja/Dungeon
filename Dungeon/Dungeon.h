@@ -10,6 +10,7 @@
 #define __Dungeon__Dungeon__
 
 #include <iostream>
+#include "Room.h"
 
 typedef struct point {
     int x;
@@ -24,9 +25,13 @@ private:
     char **map;
     Point entry;
     Point exit;
+    int totalRoomCount;
+    int generatedRoomCount;
+    Room *rooms;
 
     int getRand(int min, int max);
     void generateRooms();
+    void makeRoom();
     void generateEntry();
     void generateExit();
 
